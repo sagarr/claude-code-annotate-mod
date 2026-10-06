@@ -1,0 +1,10 @@
+{
+  "name": "annotate",
+  "version": "0.1.0",
+  "description": "Annotate selected transcript text inline, review in a side pane, send the comments back to Claude",
+  "author": {
+    "name": "sagarr"
+  },
+  "repository": "https://github.com/sagarr/claude-code-annotate-mod",
+  "types": "./types/index.d.ts"
+}

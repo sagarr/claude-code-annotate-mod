@@ -1,0 +1,5 @@
+{
+  "name": "sagarr",
+  "owner": { "name": "sagarr" },
+  "plugins": [{ "name": "annotate", "source": "./" }]
+}
