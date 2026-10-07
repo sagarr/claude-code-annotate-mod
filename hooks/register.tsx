@@ -94,6 +94,8 @@ const isSame = (a: Selected | null, b: Selected | null) =>
 
 const PANE = 'annotate'
 const TITLE = 'Annotations'
+// Docked width in columns; a width the person drags to wins.
+const COLUMNS = 40
 
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
@@ -101,7 +103,7 @@ export const register: Register = on => {
       name: 'annotate-mod',
       description: 'Toggle the Annotations pane',
     })
-    void $.ui.open({ id: PANE, title: TITLE })
+    void $.ui.open({ id: PANE, title: TITLE, columns: COLUMNS })
 
     $.clock.every(POLL_MS, async () => {
       const selected = await $.ui.selection()
@@ -126,7 +128,7 @@ export const register: Register = on => {
       await $.ui.close({ id: PANE })
       return { text: 'Annotations pane closed.' }
     }
-    await $.ui.open({ id: PANE, title: TITLE, focus: true })
+    await $.ui.open({ id: PANE, title: TITLE, columns: COLUMNS, focus: true })
 
     return { text: 'Annotations pane opened.' }
   })
