@@ -15,8 +15,8 @@ Answer `y` to add the marketplace, then pick a scope.
 
 ## Use
 
-1. Select text in a Claude reply with the mouse. The pane shows it as a quote.
-2. Press **Annotate** (or `a` while the pane has focus), type a comment, press Enter.
+1. Select text in a Claude reply with the mouse.
+2. With the prompt empty, press `a`. The Annotations pane opens with the quote and a comment field; type the comment and press Enter.
 3. Repeat, then **Send** (`s`). The annotations go to Claude as:
 
    ```
@@ -28,11 +28,12 @@ Answer `y` to add the marketplace, then pick a scope.
    your comment
    ```
 
-`/annotate-mod` toggles the pane. It opens on its own at session start when the terminal is at least 144 columns wide.
+`/annotate-mod` toggles the pane. It stays closed until you open it or press `a` on a selection; with the pane open you can also press **Annotate** there.
 
 ## Limits
 
 - Selecting text needs Claude Code's fullscreen mode.
+- `a` is taken only when the prompt is empty and there is a selection not yet annotated; otherwise it types as usual.
 - Inline comments are placed by matching the first line of the selection against the reply; a selection that can't be matched (a table, say) is still listed and sent, just not shown inline.
 - Inline comments change only what you see; Claude reads them when you press **Send**.
 

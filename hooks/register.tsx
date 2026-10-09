@@ -97,23 +97,28 @@ const TITLE = 'Annotations'
 // Docked width in columns; a width the person drags to wins.
 const COLUMNS = 40
 
+// The current selection, unless it is the one last annotated (or cancelled).
+const freshSelection = async ($: EngineInterface): Promise<Selected | null> => {
+  const selected = await $.ui.selection()
+  const quote = selected?.text.trim()
+  const found: Selected | null = quote
+    ? { quote, ...(selected?.requestId ? { rowId: selected.requestId } : {}) }
+    : null
+  const last = await read($, used)
+  if (last && !isSame(found, last)) await update($, used, () => null)
+
+  return last && isSame(found, last) ? null : found
+}
+
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     await $.command.register({
       name: 'annotate-mod',
       description: 'Toggle the Annotations pane',
     })
-    void $.ui.open({ id: PANE, title: TITLE, columns: COLUMNS })
 
     $.clock.every(POLL_MS, async () => {
-      const selected = await $.ui.selection()
-      const quote = selected?.text.trim()
-      const found: Selected | null = quote
-        ? { quote, ...(selected?.requestId ? { rowId: selected.requestId } : {}) }
-        : null
-      const last = await read($, used)
-      if (last && !isSame(found, last)) await update($, used, () => null)
-      const value = last && isSame(found, last) ? null : found
+      const value = await freshSelection($)
       if (!isSame(value, await read($, selection))) {
         await update($, selection, () => value)
       }
@@ -131,6 +136,22 @@ export const register: Register = on => {
     await $.ui.open({ id: PANE, title: TITLE, columns: COLUMNS, focus: true })
 
     return { text: 'Annotations pane opened.' }
+  })
+
+  // A bare `a` typed into an empty prompt while text is selected starts an
+  // annotation instead of typing.
+  on('prompt.edit', async ($, e, next) => {
+    const key = e.key
+    const isBareA = e.text === '' && key?.key === 'a' && !key.ctrl && !key.meta && !key.shift
+    const current = isBareA ? await freshSelection($) : null
+    if (!current) return next(e)
+
+    await update($, selection, () => current)
+    await update($, pending, () => current)
+    await $.ui.open({ id: PANE, title: TITLE, columns: COLUMNS, focus: true })
+    void $.ui.focus({ requestId: PANE, key: 'comment' }).catch(() => undefined)
+
+    return { text: e.text, cursor: e.cursor }
   })
 
   on('ui.render', { component: 'AssistantMessage' }, async ($, e, next) => {
@@ -173,6 +194,13 @@ export const register: Register = on => {
       await update($, selection, () => null)
     }
 
+    const cancelAnnotation = async () => {
+      const current = await read($, pending)
+      await update($, used, () => current)
+      await update($, pending, () => null)
+      await update($, selection, () => null)
+    }
+
     const send = async () => {
       const all = await read($, annotations)
       if (all.length === 0) return
@@ -195,7 +223,7 @@ export const register: Register = on => {
             ) : (
               <Text dimColor>No text field on this surface.</Text>
             )}
-            <Button key="cancel" label="Cancel" plain onPress={() => update($, pending, () => null)} />
+            <Button key="cancel" label="Cancel" plain onPress={cancelAnnotation} />
           </Box>
         ) : (
           <Box flexDirection="column">
