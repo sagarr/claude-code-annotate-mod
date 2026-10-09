@@ -96,6 +96,7 @@ const PANE = 'annotate'
 const TITLE = 'Annotations'
 // Docked width in columns; a width the person drags to wins.
 const COLUMNS = 40
+const FOCUS_DELAY_MS = 50
 
 // The current selection, unless it is the one last annotated (or cancelled).
 const freshSelection = async ($: EngineInterface): Promise<Selected | null> => {
@@ -148,8 +149,11 @@ export const register: Register = on => {
 
     await update($, selection, () => current)
     await update($, pending, () => current)
-    await $.ui.open({ id: PANE, title: TITLE, columns: COLUMNS, focus: true })
-    void $.ui.focus({ requestId: PANE, key: 'comment' }).catch(() => undefined)
+    // The prompt keeps the keys while its edit is open: ask for them after.
+    $.clock.after(FOCUS_DELAY_MS, async () => {
+      await $.ui.open({ id: PANE, title: TITLE, columns: COLUMNS, focus: true })
+      await $.ui.focus({ requestId: PANE, key: 'comment' }).catch(() => undefined)
+    })
 
     return { text: e.text, cursor: e.cursor }
   })
